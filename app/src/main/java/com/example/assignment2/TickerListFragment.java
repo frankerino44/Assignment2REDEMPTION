@@ -1,8 +1,14 @@
 package com.example.assignment2;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.view.LayoutInflater;
@@ -11,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +30,7 @@ import java.util.List;
 public class TickerListFragment extends Fragment {
 
     ListView tickerLV;
-    private List<String> tickerList;
+    public List<String> tickerList;
     private TickerViewModel tickerViewModel;
 
     public TickerListFragment() {
@@ -34,7 +41,7 @@ public class TickerListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        tickerViewModel = new ViewModelProvider(requireActivity()).get(TickerViewModel.class);
+        tickerViewModel = TickerViewModel.getInstance();
     }
 
     @Override
@@ -58,6 +65,17 @@ public class TickerListFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String selectedTicker = tickerList.get(position);
                 tickerViewModel.setSelectedTicker(selectedTicker);
+            }
+        });
+
+        tickerViewModel.getReceivedTicker().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String ticker) {
+                if (tickerList.size() >= 6) {
+                    tickerList.remove(5);
+                }
+                tickerList.add(ticker);
+                adapter.notifyDataSetChanged();
             }
         });
 
