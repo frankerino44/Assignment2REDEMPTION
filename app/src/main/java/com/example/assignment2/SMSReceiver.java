@@ -30,9 +30,20 @@ public class SMSReceiver extends BroadcastReceiver {
                     SmsMessage smsMessage = SmsMessage.createFromPdu((byte[]) pdu);
                     String sender = smsMessage.getDisplayOriginatingAddress();
                     String messageBody = smsMessage.getMessageBody();
-
-                    tickerViewModel.setReceivedTicker(messageBody);
-                    Log.i("SMSReceiver", "TickerViewModel instance: " + tickerViewModel);
+                    int length = messageBody.length();
+                    if (length >= 12) {
+                        String ticker = messageBody.substring(9, length-2);
+                        if (messageBody.substring(0, 9).matches("Ticker:<<") &&
+                                messageBody.substring(length-2, length).matches(">>") &&
+                                ticker.matches("[a-zA-Z]+")) {
+                            Log.i("IF", "IF");
+                            tickerViewModel.setReceivedTicker(ticker.toUpperCase());
+                        } else {
+                            Toast.makeText(context, "No valid watchlist entry was found.", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(context, "No valid watchlist entry was found.", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         }
