@@ -30,7 +30,8 @@ import java.util.List;
 public class TickerListFragment extends Fragment {
 
     ListView tickerLV;
-    public List<String> tickerList;
+    public ArrayList<String> tickerList;
+    private int listNum;
     private TickerViewModel tickerViewModel;
 
     public TickerListFragment() {
@@ -42,19 +43,23 @@ public class TickerListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         tickerViewModel = TickerViewModel.getInstance();
+
+        listNum = 0;
+        tickerList = new ArrayList<>();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_ticker_list, container, false);
+
+        tickerList = SharedPreferencesUtils.loadStringArrayList(requireContext(), "myKey");
+        if (tickerList.size() == 0) {
+            tickerList.add("BAC");
+            tickerList.add("AAPL");
+            tickerList.add("DIS");
+        }
         tickerLV = view.findViewById(R.id.tickerLV);
-
-        tickerList = new ArrayList<>();
-
-        tickerList.add("BAC");
-        tickerList.add("AAPL");
-        tickerList.add("DIS");
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, tickerList);
 
@@ -71,15 +76,29 @@ public class TickerListFragment extends Fragment {
         tickerViewModel.getReceivedTicker().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String ticker) {
-                if (tickerList.size() >= 6) {
-                    tickerList.remove(5);
+                if (!tickerList.contains(ticker)) {
+                    if (tickerList.size() >= 6) {
+                        if (listNum == 6) {
+                            listNum = 0;
+                        }
+                        tickerList.set(listNum, ticker);
+                        listNum++;
+                    } else {
+                        tickerList.add(ticker);
+                    }
+                    adapter.notifyDataSetChanged();
                 }
-                tickerList.add(ticker);
-                adapter.notifyDataSetChanged();
             }
         });
 
         // Inflate the layout for this fragment
         return view;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        ArrayList<String> myList = tickerList; // Replace with your actual data
+        SharedPreferencesUtils.saveStringArrayList(getContext(), "myKey", myList);
     }
 }
